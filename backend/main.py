@@ -143,16 +143,25 @@ async def chat_with_agent(request: QueryRequest):
                     event_details = {"decision": route_decision, "reason": "Based on initial query analysis."}
                 event_type = "router_decision"
             elif current_node_name == "rag_lookup":
-                rag_content_summary = node_output_state.get("rag", "")[:200] + "..."
+                rag_context = node_output_state.get("rag", "")
+                rag_content_summary = rag_context[:200] + "..." if rag_context else ""
                 
                 rag_sufficient = node_output_state.get("route") == "answer" 
                 
                 if rag_sufficient:
                     event_description = f"RAG Lookup performed. Content found and deemed sufficient. Proceeding to answer."
-                    event_details = {"retrieved_content_summary": rag_content_summary, "sufficiency_verdict": "Sufficient"}
+                    event_details = {
+                        "retrieved_content_summary": rag_content_summary,
+                        "retrieved_context": rag_context,
+                        "sufficiency_verdict": "Sufficient"
+                    }
                 else:
                     event_description = f"RAG Lookup performed. Content NOT sufficient. Diverting to web search."
-                    event_details = {"retrieved_content_summary": rag_content_summary, "sufficiency_verdict": "Not Sufficient"}
+                    event_details = {
+                        "retrieved_content_summary": rag_content_summary,
+                        "retrieved_context": rag_context,
+                        "sufficiency_verdict": "Not Sufficient"
+                    }
                 
                 event_type = "rag_action"
             elif current_node_name == "web_search":
